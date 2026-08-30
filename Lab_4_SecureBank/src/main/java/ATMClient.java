@@ -25,7 +25,10 @@ public class ATMClient {
 
         try (
                 Socket socket =
-                        new Socket(SERVER_ADDRESS, PORT);
+                        new Socket(
+                                SERVER_ADDRESS,
+                                PORT
+                        );
 
                 BufferedReader input =
                         new BufferedReader(
@@ -41,14 +44,18 @@ public class ATMClient {
                         )
         ) {
 
-            // Send account details to server
+            // Send account number
             output.println(accountNumber);
+
+            // Send PIN
             output.println(pin);
 
             // Receive response
             String line;
 
-            System.out.println("\n----- BANK RESPONSE -----");
+            System.out.println(
+                    "\n----- BANK RESPONSE -----"
+            );
 
             while ((line = input.readLine()) != null) {
                 System.out.println(line);
