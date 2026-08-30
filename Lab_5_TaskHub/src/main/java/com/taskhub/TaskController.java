@@ -1,55 +1,50 @@
 package com.taskhub;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import javafx.scene.control.Label;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TaskController {
 
-    @FXML
-    private ListView<String> taskListView;
+    private final TaskService taskService;
 
     @FXML
-    private TextField taskTextField;
+    private Label statusLabel;
 
-    @FXML
-    private Button addButton;
-
-    @Autowired
-    private TaskService taskService;
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
+    }
 
     @FXML
     public void initialize() {
+        System.out.println("TaskController created successfully.");
 
-        refreshTaskList();
-    }
-
-    @FXML
-    private void addTask() {
-
-        String description = taskTextField.getText();
-
-        if (description != null && !description.trim().isEmpty()) {
-
-            taskService.addTask(description);
-
-            taskTextField.clear();
-
-            refreshTaskList();
+        if (statusLabel != null) {
+            statusLabel.setText("TaskHub is ready!");
         }
     }
 
-    private void refreshTaskList() {
+    @FXML
+    private void handleCreateTask() {
+        System.out.println("Create Task button clicked.");
 
-        taskListView.getItems().clear();
+        if (statusLabel != null) {
+            statusLabel.setText("Creating task...");
+        }
 
-        taskListView.getItems().addAll(
-                taskService.getTasks()
-        );
+        taskService.createTask();
+    }
+
+    @FXML
+    private void handleViewTasks() {
+        System.out.println("View Tasks button clicked.");
+
+        if (statusLabel != null) {
+            statusLabel.setText("Viewing tasks...");
+        }
+
+        taskService.viewTasks();
     }
 }
+
