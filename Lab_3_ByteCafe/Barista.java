@@ -1,38 +1,51 @@
 public class Barista implements Runnable {
 
-    private final OrderQueue orderQueue;
+  // Stores the shared order queue
+  private final OrderQueue orderQueue;
 
-    public Barista(OrderQueue orderQueue) {
-        this.orderQueue = orderQueue;
-    }
+  // Creates a barista with an order queue
+  public Barista(OrderQueue orderQueue) {
+    this.orderQueue = orderQueue;
+  }
 
-    @Override
-    public void run() {
+  @Override
+  public void run() {
 
-        while (true) {
+    // Keep processing orders
+    while (true) {
 
-            String order = orderQueue.takeOrder();
+        String customerOrder = orderQueue.takeOrder();
 
-            if (order != null) {
+        // Process the order if one is available
+        if (customerOrder != null) {
 
-                System.out.println(
-                        Thread.currentThread().getName()
-                        + " is brewing: " + order
-                );
-
-                try {
-                    Thread.sleep(1500);
-
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-
-                System.out.println(
-                        Thread.currentThread().getName()
-                        + " finished brewing: " + order
-                );
-            }
+            brewOrder(customerOrder);
         }
     }
+  }
+
+  // Brews and completes an order
+  private void brewOrder(String customerOrder) {
+
+    System.out.println(
+            Thread.currentThread().getName()
+            + " is brewing: " + customerOrder
+    );
+
+    try {
+        // Simulate brewing time
+        Thread.sleep(1500);
+
+    } catch (InterruptedException e) {
+
+        // Stop the thread safely
+        Thread.currentThread().interrupt();
+        return;
+    }
+
+    System.out.println(
+            Thread.currentThread().getName()
+            + " finished brewing: " + customerOrder
+    );
+  }
 }
