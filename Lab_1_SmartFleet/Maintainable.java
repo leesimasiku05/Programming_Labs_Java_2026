@@ -1,6 +1,8 @@
 public interface Maintainable {
 
-    void performMaintenance();
+  // Performs vehicle maintenance
+  void performMaintenance();
 
-    boolean needsService();
+  // Checks if maintenance is needed
+  boolean needsService();
 }
