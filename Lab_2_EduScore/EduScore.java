@@ -6,68 +6,96 @@ import java.util.NoSuchElementException;
 
 public class EduScore {
 
-    private Map<String, List<Double>> studentGrades;
+  // Stores each student's grades
+  private final Map<String, List<Double>> studentGrades;
 
-    public EduScore() {
-        studentGrades = new HashMap<>();
+  // Creates an empty grade record
+  public EduScore() {
+    studentGrades = new HashMap<>();
+  }
+
+  // Adds a grade to a student's record
+  public void addGrade(String studentName, double grade)
+        throws InvalidGradeException {
+
+    // Check that the student name is valid
+    if (studentName == null || studentName.trim().isEmpty()) {
+        throw new IllegalArgumentException(
+                "Student name cannot be empty."
+        );
     }
 
-    public void addGrade(String studentName, double grade)
-            throws InvalidGradeException {
-
-        if (grade < 0.0 || grade > 100.0) {
-            throw new InvalidGradeException(
-                    "Grade must be between 0 and 100."
-            );
-        }
-
-        studentGrades.putIfAbsent(studentName, new ArrayList<>());
-
-        studentGrades.get(studentName).add(grade);
+    // Check that the grade is between 0 and 100
+    if (grade < 0.0 || grade > 100.0) {
+        throw new InvalidGradeException(
+                "Grade must be between 0 and 100."
+        );
     }
 
-    public double getStudentAverage(String studentName) {
+    // Create a grade list if the student is new
+    studentGrades
+            .computeIfAbsent(studentName, name -> new ArrayList<>())
+            .add(grade);
+  }
 
-        if (!studentGrades.containsKey(studentName)) {
-            throw new NoSuchElementException(
-                    "Student does not exist: " + studentName
-            );
-        }
+  // Calculates a student's average grade
+  public double getStudentAverage(String studentName) {
 
-        List<Double> grades = studentGrades.get(studentName);
+    List<Double> grades = getGradesForStudent(studentName);
 
-        double total = 0;
-
-        for (double grade : grades) {
-            total += grade;
-        }
-
-        return total / grades.size();
+    if (grades.isEmpty()) {
+        throw new NoSuchElementException(
+                "Student has no grades: " + studentName
+        );
     }
 
-    public double getHighestGrade(String studentName) {
+    double totalGrades = 0;
 
-        if (!studentGrades.containsKey(studentName)) {
-            throw new NoSuchElementException(
-                    "Student does not exist: " + studentName
-            );
-        }
-
-        List<Double> grades = studentGrades.get(studentName);
-
-        double highest = grades.get(0);
-
-        for (double grade : grades) {
-            if (grade > highest) {
-                highest = grade;
-            }
-        }
-
-        return highest;
+    // Add all grades together
+    for (double grade : grades) {
+        totalGrades += grade;
     }
 
+    return totalGrades / grades.size();
+  }
 
-    public Map<String, List<Double>> getStudentGrades() {
-        return studentGrades;
+  // Finds a student's highest grade
+  public double getHighestGrade(String studentName) {
+
+    List<Double> grades = getGradesForStudent(studentName);
+
+    if (grades.isEmpty()) {
+        throw new NoSuchElementException(
+                "Student has no grades: " + studentName
+        );
     }
+
+    double highestGrade = grades.get(0);
+
+    // Find the highest grade
+    for (double grade : grades) {
+        if (grade > highestGrade) {
+            highestGrade = grade;
+        }
+    }
+
+    return highestGrade;
+  }
+
+  // Gets the grades for a specific student
+  private List<Double> getGradesForStudent(String studentName) {
+
+    if (!studentGrades.containsKey(studentName)) {
+        throw new NoSuchElementException(
+                "Student does not exist: " + studentName
+        );
+    }
+
+    return studentGrades.get(studentName);
+  }
+
+  // Returns all student grades
+  public Map<String, List<Double>> getStudentGrades() {
+    return studentGrades;
+  }
 }
