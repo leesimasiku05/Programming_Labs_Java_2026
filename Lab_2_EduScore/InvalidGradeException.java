@@ -1,6 +1,8 @@
 public class InvalidGradeException extends Exception {
 
-    public InvalidGradeException(String message) {
-        super(message);
-    }
+  // Creates an exception with an error message
+  public InvalidGradeException(String message) {
+    super(message);
+  }
 }
+
