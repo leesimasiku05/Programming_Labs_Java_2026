@@ -1,42 +1,71 @@
 public class ByteCafe {
 
-    public static void main(String[] args) {
-        OrderQueue orderQueue = new OrderQueue();
+  public static void main(String[] args) {
 
-        Thread customer1 = new Thread(
-                new Customer(orderQueue),
-                "Customer-1"
-        );
+    // Create the shared order queue
+    OrderQueue orderQueue = new OrderQueue();
 
-        Thread customer2 = new Thread(
-                new Customer(orderQueue),
-                "Customer-2"
-        );
+    // Create customer and barista threads
+    Thread[] customerThreads = createCustomerThreads(orderQueue);
+    Thread[] baristaThreads = createBaristaThreads(orderQueue);
 
-        Thread customer3 = new Thread(
-                new Customer(orderQueue),
-                "Customer-3"
-        );
+    // Display the system heading
+    displayHeading();
 
-        Thread barista1 = new Thread(
-                new Barista(orderQueue),
-                "Barista-1"
-        );
+    // Start all threads
+    startThreads(customerThreads);
+    startThreads(baristaThreads);
+  }
 
-        Thread barista2 = new Thread(
-                new Barista(orderQueue),
-                "Barista-2"
-        );
+  // Creates the customer threads
+  private static Thread[] createCustomerThreads(
+        OrderQueue orderQueue) {
 
-        System.out.println("================================");
-        System.out.println("       BYTECAFE ORDER SYSTEM");
-        System.out.println("================================");
+    return new Thread[] {
+            new Thread(
+                    new Customer(orderQueue),
+                    "Customer-1"
+            ),
+            new Thread(
+                    new Customer(orderQueue),
+                    "Customer-2"
+            ),
+            new Thread(
+                    new Customer(orderQueue),
+                    "Customer-3"
+            )
+    };
+  }
 
-        customer1.start();
-        customer2.start();
-        customer3.start();
+  // Creates the barista threads
+  private static Thread[] createBaristaThreads(
+        OrderQueue orderQueue) {
 
-        barista1.start();
-        barista2.start();
+    return new Thread[] {
+            new Thread(
+                    new Barista(orderQueue),
+                    "Barista-1"
+            ),
+            new Thread(
+                    new Barista(orderQueue),
+                    "Barista-2"
+            )
+    };
+  }
+
+  // Displays the program heading
+  private static void displayHeading() {
+
+    System.out.println("================================");
+    System.out.println("       BYTECAFE ORDER SYSTEM");
+    System.out.println("================================");
+  }
+
+  // Starts all threads in the given array
+  private static void startThreads(Thread[] threads) {
+
+    for (Thread thread : threads) {
+        thread.start();
     }
+  }
 }
