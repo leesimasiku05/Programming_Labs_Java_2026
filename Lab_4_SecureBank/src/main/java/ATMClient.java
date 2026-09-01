@@ -6,72 +6,82 @@ import java.util.Scanner;
 
 public class ATMClient {
 
-    private static final String SERVER_ADDRESS = "localhost";
-    private static final int PORT = 5000;
+  // Server connection details
+  private static final String SERVER_ADDRESS = "localhost";
+  private static final int PORT = 5000;
 
-    public static void main(String[] args) {
+  public static void main(String[] args) {
 
-        Scanner scanner = new Scanner(System.in);
+    // Create scanner for user input
+    Scanner scanner = new Scanner(System.in);
 
-        System.out.println("================================");
-        System.out.println("          SECUREBANK ATM");
-        System.out.println("================================");
+    // Display ATM heading
+    System.out.println("================================");
+    System.out.println("          SECUREBANK ATM");
+    System.out.println("================================");
 
-        System.out.print("Enter account number: ");
-        String accountNumber = scanner.nextLine();
+    // Get account details from the user
+    System.out.print("Enter account number: ");
+    String accountNumber = scanner.nextLine();
 
-        System.out.print("Enter PIN: ");
-        String pin = scanner.nextLine();
+    System.out.print("Enter PIN: ");
+    String pin = scanner.nextLine();
 
-        try (
-                Socket socket =
-                        new Socket(
-                                SERVER_ADDRESS,
-                                PORT
-                        );
+    try (
+            // Connect to the bank server
+            Socket socket =
+                    new Socket(
+                            SERVER_ADDRESS,
+                            PORT
+                    );
 
-                BufferedReader input =
-                        new BufferedReader(
-                                new InputStreamReader(
-                                        socket.getInputStream()
-                                )
-                        );
+            // Receive data from the server
+            BufferedReader input =
+                    new BufferedReader(
+                            new InputStreamReader(
+                                    socket.getInputStream()
+                            )
+                    );
 
-                PrintWriter output =
-                        new PrintWriter(
-                                socket.getOutputStream(),
-                                true
-                        )
-        ) {
+            // Send data to the server
+            PrintWriter output =
+                    new PrintWriter(
+                            socket.getOutputStream(),
+                            true
+                    )
+    ) {
 
-            // Send account number
-            output.println(accountNumber);
+        // Send account number to the server
+        output.println(accountNumber);
 
-            // Send PIN
-            output.println(pin);
+        // Send PIN to the server
+        output.println(pin);
 
-            // Receive response
-            String line;
+        // Receive the bank response
+        String line;
 
-            System.out.println(
-                    "\n----- BANK RESPONSE -----"
-            );
+        System.out.println(
+                "\n----- BANK RESPONSE -----"
+        );
 
-            while ((line = input.readLine()) != null) {
-                System.out.println(line);
-            }
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Could not connect to bank server."
-            );
-
-            System.out.println(
-                    "Error: " + e.getMessage()
-            );
+        // Display the server response
+        while ((line = input.readLine()) != null) {
+            System.out.println(line);
         }
 
-        scanner.close();
+    } catch (Exception e) {
+
+        // Handle connection errors
+        System.out.println(
+                "Could not connect to bank server."
+        );
+
+        System.out.println(
+                "Error: " + e.getMessage()
+        );
     }
+
+    // Close the scanner
+    scanner.close();
+  }
 }
