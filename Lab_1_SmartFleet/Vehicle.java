@@ -1,42 +1,48 @@
 public abstract class Vehicle {
 
-    // Encapsulated properties
+    // Stores basic vehicle details
     private String vehicleId;
     private String model;
     private double baseRentalRate;
 
-    // Constructor
+    // Creates a vehicle with its basic details
     public Vehicle(String vehicleId, String model, double baseRentalRate) {
         this.vehicleId = vehicleId;
         this.model = model;
         this.baseRentalRate = baseRentalRate;
     }
 
-    // Getters and setters
+    // Returns the vehicle ID
     public String getVehicleId() {
         return vehicleId;
     }
 
+    // Updates the vehicle ID
     public void setVehicleId(String vehicleId) {
         this.vehicleId = vehicleId;
     }
 
+    // Returns the vehicle model
     public String getModel() {
         return model;
     }
 
+    // Updates the vehicle model
     public void setModel(String model) {
         this.model = model;
     }
 
+    // Returns the basic rental rate
     public double getBaseRentalRate() {
         return baseRentalRate;
     }
 
+    // Updates the basic rental rate
     public void setBaseRentalRate(double baseRentalRate) {
         this.baseRentalRate = baseRentalRate;
     }
 
-    // Abstract method
+    // Calculates the rental cost for the given number of days
     public abstract double calculateRentalCost(int days);
 }
+    
