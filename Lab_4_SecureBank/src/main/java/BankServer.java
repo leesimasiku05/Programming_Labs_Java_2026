@@ -6,114 +6,208 @@ import java.net.Socket;
 
 public class BankServer {
 
-    private static final int PORT = 5000;
+  private static final int PORT = 5000;
 
-    public static void main(String[] args) {
+  public static void main(String[] args) {
 
-        // Set up database
-        Database.setupDatabase();
+    // Set up the database
+    Database.setupDatabase();
 
-        System.out.println("================================");
-        System.out.println("       SECUREBANK SERVER");
-        System.out.println("================================");
+    // Display server heading
+    System.out.println("================================");
+    System.out.println("       SECUREBANK SERVER");
+    System.out.println("================================");
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+    try (ServerSocket serverSocket = new ServerSocket(PORT)) {
 
-            System.out.println("Server started on port " + PORT);
-            System.out.println("Waiting for ATM clients...");
+        // Start the bank server
+        System.out.println("Server started on port " + PORT);
+        System.out.println("Waiting for ATM clients...");
 
-            while (true) {
+        while (true) {
 
-                Socket clientSocket = serverSocket.accept();
+            // Wait for an ATM client
+            Socket clientSocket = serverSocket.accept();
 
-                System.out.println(
-                        "Client connected: "
-                        + clientSocket.getInetAddress()
-                );
+            System.out.println(
+                    "Client connected: "
+                    + clientSocket.getInetAddress()
+            );
 
-                // Handle each client in its own thread
-                Thread clientThread = new Thread(
-                        new ClientHandler(clientSocket)
-                );
+            // Handle the client in a separate thread
+            Thread clientThread = new Thread(
+                    new ClientHandler(clientSocket)
+            );
 
-                clientThread.start();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Server error: " + e.getMessage());
+            clientThread.start();
         }
+
+    } catch (Exception e) {
+
+        // Handle server errors
+        System.out.println(
+                "Server error: " + e.getMessage()
+        );
     }
+  }
+
 }
 
+  // Handles communication with one ATM client
+  class ClientHandler implements Runnable {
 
-// Handles communication with one ATM client
-class ClientHandler implements Runnable {
+  private final Socket clientSocket;
 
-    private final Socket clientSocket;
+  public ClientHandler(Socket clientSocket) {
+    this.clientSocket = clientSocket;
+  }
 
-    public ClientHandler(Socket clientSocket) {
-        this.clientSocket = clientSocket;
-    }
+  @Override
+  public void run() {
 
-    @Override
-    public void run() {
+    try (
+            // Receive data from the ATM
+            BufferedReader input =
+                    new BufferedReader(
+                            new InputStreamReader(
+                                    clientSocket.getInputStream()
+                            )
+                    );
 
-        try (
-                BufferedReader input = new BufferedReader(
-                        new InputStreamReader(clientSocket.getInputStream())
-                );
+            // Send data to the ATM
+            PrintWriter output =
+                    new PrintWriter(
+                            clientSocket.getOutputStream(),
+                            true
+                    )
+    ) {
 
-                PrintWriter output = new PrintWriter(
-                        clientSocket.getOutputStream(),
-                        true
-                )
-        ) {
+        // Get account details
+        String accountNumber = input.readLine();
+        String pin = input.readLine();
 
-            // Receive account number
-            String accountNumber = input.readLine();
+        System.out.println(
+                "Login attempt for account: " + accountNumber
+        );
 
-            // Receive PIN
-            String pin = input.readLine();
+        // Check the account details
+        Double balance =
+                Database.getBalance(accountNumber, pin);
 
-            System.out.println(
-                    "Login attempt for account: " + accountNumber
+        if (balance != null) {
+
+            // Send successful login response
+            output.println(
+                    "LOGIN SUCCESSFUL\n"
+                    + "Account: " + accountNumber
+                    + "\nBalance: ZMW "
+                    + String.format("%.2f", balance)
             );
 
-            // Check database
-            Double balance =
-                    Database.getBalance(accountNumber, pin);
+        } else {
 
-            if (balance != null) {
+            // Send failed login response
+            output.println(
+                    "LOGIN FAILED\n"
+                    + "Invalid account number or PIN."
+            );
+        }
 
-                output.println(
-                        "LOGIN SUCCESSFUL\n"
-                        + "Account: " + accountNumber
-                        + "\nBalance: ZMW "
-                        + String.format("%.2f", balance)
-                );
+    } catch (Exception e) {
 
-            } else {
+        // Handle client errors
+        System.out.println(
+                "Client connection error: "
+                + e.getMessage()
+        );
 
-                output.println(
-                        "LOGIN FAILED\n"
-                        + "Invalid account number or PIN."
-                );
-            }
+    } finally {
 
+        try {
+            // Close the client connection
+            clientSocket.close();
         } catch (Exception e) {
-
-            System.out.println(
-                    "Client connection error: "
-                    + e.getMessage()
-            );
-
-        } finally {
-
-            try {
-                clientSocket.close();
-            } catch (Exception e) {
-                // Ignore closing error
-            }
+            // Ignore closing errors
         }
     }
+  }
+
+  }
+
+  // ATM client communicates with the bank server
+  class ATMClient {
+
+  private static final String SERVER_ADDRESS = "localhost";
+  private static final int PORT = 5000;
+
+  public static void main(String[] args) {
+
+    BufferedReader console =
+            new BufferedReader(
+                    new InputStreamReader(System.in)
+            );
+
+    System.out.println("================================");
+    System.out.println("          SECUREBANK ATM");
+    System.out.println("================================");
+
+    try {
+
+        // Get account details
+        System.out.print("Enter account number: ");
+        String accountNumber = console.readLine();
+
+        System.out.print("Enter PIN: ");
+        String pin = console.readLine();
+
+        // Connect to the bank server
+        try (
+                Socket socket =
+                        new Socket(
+                                SERVER_ADDRESS,
+                                PORT
+                        );
+
+                BufferedReader input =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        socket.getInputStream()
+                                )
+                        );
+
+                PrintWriter output =
+                        new PrintWriter(
+                                socket.getOutputStream(),
+                                true
+                        )
+        ) {
+
+            // Send account details
+            output.println(accountNumber);
+            output.println(pin);
+
+            System.out.println(
+                    "\n----- BANK RESPONSE -----"
+            );
+
+            // Display the server response
+            String line;
+
+            while ((line = input.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+
+    } catch (Exception e) {
+
+        // Handle connection errors
+        System.out.println(
+                "Could not connect to bank server."
+        );
+
+        System.out.println(
+                "Error: " + e.getMessage()
+        );
+    }
+  }
 }
