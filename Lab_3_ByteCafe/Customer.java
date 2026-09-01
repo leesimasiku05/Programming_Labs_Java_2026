@@ -2,44 +2,64 @@ import java.util.Random;
 
 public class Customer implements Runnable {
 
-    private final OrderQueue orderQueue;
-    private final Random random = new Random();
+  // Stores the shared order queue
+  private final OrderQueue orderQueue;
 
-    private final String[] menu = {
-            "Espresso",
-            "Latte",
-            "Cappuccino",
-            "Americano",
-            "Mocha"
-    };
+  // Generates random values
+  private final Random random = new Random();
 
-    public Customer(OrderQueue orderQueue) {
-        this.orderQueue = orderQueue;
+  // Available drinks on the menu
+  private final String[] menu = {
+        "Espresso",
+        "Latte",
+        "Cappuccino",
+        "Americano",
+        "Mocha"
+  };
+
+  // Creates a customer with an order queue
+  public Customer(OrderQueue orderQueue) {
+    this.orderQueue = orderQueue;
+  }
+
+  @Override
+  public void run() {
+
+    // Place 5 orders
+    for (int orderNumber = 1; orderNumber <= 5; orderNumber++) {
+
+        placeRandomOrder();
+        waitBeforeNextOrder();
     }
 
-    @Override
-    public void run() {
+    // Show when the customer is finished
+    System.out.println(
+            Thread.currentThread().getName()
+            + " finished placing orders."
+    );
+  }
 
-        for (int i = 1; i <= 5; i++) {
+  // Creates and places a random order
+  private void placeRandomOrder() {
 
-            String order = menu[random.nextInt(menu.length)];
+    String customerOrder =
+            menu[random.nextInt(menu.length)];
 
-            orderQueue.placeOrder(order);
+    orderQueue.placeOrder(customerOrder);
+  }
 
-            try {
-                // Random delay between 500ms and 1000ms
-                int delay = 500 + random.nextInt(501);
-                Thread.sleep(delay);
+  // Waits before placing the next order
+  private void waitBeforeNextOrder() {
 
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
+    try {
+        // Random delay between 500ms and 1000ms
+        int delay = 500 + random.nextInt(501);
+        Thread.sleep(delay);
 
-        System.out.println(
-                Thread.currentThread().getName()
-                + " finished placing orders."
-        );
+    } catch (InterruptedException e) {
+
+        // Stop the thread safely
+        Thread.currentThread().interrupt();
     }
+  }
 }
