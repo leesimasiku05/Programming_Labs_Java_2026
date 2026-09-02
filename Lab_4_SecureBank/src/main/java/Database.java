@@ -6,123 +6,317 @@ import java.sql.SQLException;
 
 public class Database {
 
-  // Database connection details
-  private static final String URL = "jdbc:sqlite:bank.db";
+    private static final String DATABASE_URL =
+            "jdbc:sqlite:bank.db";
 
-  // Connects to the database
-  public static Connection connect() throws SQLException {
-    return DriverManager.getConnection(URL);
-  }
+    // ==================================
+    // DATABASE CONNECTION
+    // ==================================
 
-  // Sets up the database
-  public static void setupDatabase() {
+    public static Connection connect()
+            throws SQLException {
 
-    createAccountsTable();
-    insertTestAccounts();
-
-    System.out.println("Database ready.");
-  }
-
-  // Creates the accounts table
-  private static void createAccountsTable() {
-
-    String createTable = """
-            CREATE TABLE IF NOT EXISTS accounts (
-                account_number TEXT PRIMARY KEY,
-                pin TEXT NOT NULL,
-                balance REAL NOT NULL
-            )
-            """;
-
-    try (
-            Connection connection = connect();
-            PreparedStatement statement =
-                    connection.prepareStatement(createTable)
-    ) {
-
-        statement.executeUpdate();
-
-    } catch (SQLException e) {
-
-        System.out.println("Database setup failed!");
-        e.printStackTrace();
-    }
-  }
-
-  // Adds test accounts to the database
-  private static void insertTestAccounts() {
-
-    String insertAccount = """
-            INSERT OR IGNORE INTO accounts
-            (account_number, pin, balance)
-            VALUES (?, ?, ?)
-            """;
-
-    try (
-            Connection connection = connect();
-            PreparedStatement statement =
-                    connection.prepareStatement(insertAccount)
-    ) {
-
-        // Add test accounts
-        addAccount(statement, "10001", "1234", 5000.00);
-        addAccount(statement, "10002", "5678", 8500.00);
-        addAccount(statement, "10003", "9999", 12000.00);
-
-    } catch (SQLException e) {
-
-        System.out.println("Could not add test accounts.");
-        e.printStackTrace();
-    }
-  }
-
-  // Adds one account to the database
-  private static void addAccount(
-        PreparedStatement statement,
-        String accountNumber,
-        String pin,
-        double balance) throws SQLException {
-
-    statement.setString(1, accountNumber);
-    statement.setString(2, pin);
-    statement.setDouble(3, balance);
-    statement.executeUpdate();
-  }
-
-  // Gets the balance for a valid account
-  public static Double getBalance(
-        String accountNumber,
-        String pin) {
-
-    String sql = """
-            SELECT balance
-            FROM accounts
-            WHERE account_number = ? AND pin = ?
-            """;
-
-    try (
-            Connection connection = connect();
-            PreparedStatement statement =
-                    connection.prepareStatement(sql)
-    ) {
-
-        statement.setString(1, accountNumber);
-        statement.setString(2, pin);
-
-        try (ResultSet result = statement.executeQuery()) {
-
-            if (result.next()) {
-                return result.getDouble("balance");
-            }
-        }
-
-    } catch (SQLException e) {
-
-        System.out.println(
-                "Database error: " + e.getMessage()
+        return DriverManager.getConnection(
+                DATABASE_URL
         );
     }
 
-    return null;
-  }
+    // ==================================
+    // DATABASE SETUP
+    // ==================================
+
+    public static void setupDatabase() {
+
+        String createTable = """
+                CREATE TABLE IF NOT EXISTS accounts (
+                    account_number TEXT PRIMARY KEY,
+                    account_holder_name TEXT NOT NULL,
+                    pin TEXT NOT NULL,
+                    balance REAL NOT NULL
+                )
+                """;
+
+        try (
+                Connection connection = connect();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(
+                                createTable
+                        )
+        ) {
+
+            statement.executeUpdate();
+
+            System.out.println(
+                    "Database ready."
+            );
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Database setup failed!"
+            );
+
+            System.out.println(
+                    "Error: " + e.getMessage()
+            );
+        }
+    }
+
+    // ==================================
+    // CREATE ACCOUNT
+    // ==================================
+
+    public static String createAccount(
+            String accountHolderName,
+            String pin) {
+
+        String accountNumber =
+                generateAccountNumber();
+
+        String sql = """
+                INSERT INTO accounts
+                (account_number, account_holder_name, pin, balance)
+                VALUES (?, ?, ?, ?)
+                """;
+
+        try (
+                Connection connection = connect();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            statement.setString(1, accountNumber);
+            statement.setString(2, accountHolderName);
+            statement.setString(3, pin);
+            statement.setDouble(4, 0.00);
+
+            statement.executeUpdate();
+
+            return accountNumber;
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Account creation failed: "
+                            + e.getMessage()
+            );
+
+            return null;
+        }
+    }
+
+    // ==================================
+    // GENERATE ACCOUNT NUMBER
+    // ==================================
+
+    private static String generateAccountNumber() {
+
+        String sql =
+                "SELECT MAX(CAST(account_number AS INTEGER)) "
+                        + "FROM accounts";
+
+        try (
+                Connection connection = connect();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql);
+
+                ResultSet result =
+                        statement.executeQuery()
+        ) {
+
+            if (result.next()) {
+
+                int highestAccountNumber =
+                        result.getInt(1);
+
+                if (result.wasNull()) {
+                    return "10001";
+                }
+
+                return String.valueOf(
+                        highestAccountNumber + 1
+                );
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Could not generate account number."
+            );
+        }
+
+        return "10001";
+    }
+
+    // ==================================
+    // AUTHENTICATE USER
+    // ==================================
+
+    public static String authenticateUser(
+            String accountNumber,
+            String pin) {
+
+        String sql = """
+                SELECT account_holder_name
+                FROM accounts
+                WHERE account_number = ?
+                AND pin = ?
+                """;
+
+        try (
+                Connection connection = connect();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            statement.setString(1, accountNumber);
+            statement.setString(2, pin);
+
+            try (
+                    ResultSet result =
+                            statement.executeQuery()
+            ) {
+
+                if (result.next()) {
+
+                    return result.getString(
+                            "account_holder_name"
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Authentication error: "
+                            + e.getMessage()
+            );
+        }
+
+        return null;
+    }
+
+    // ==================================
+    // GET BALANCE
+    // ==================================
+
+    public static Double getBalance(
+            String accountNumber) {
+
+        String sql = """
+                SELECT balance
+                FROM accounts
+                WHERE account_number = ?
+                """;
+
+        try (
+                Connection connection = connect();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            statement.setString(1, accountNumber);
+
+            try (
+                    ResultSet result =
+                            statement.executeQuery()
+            ) {
+
+                if (result.next()) {
+
+                    return result.getDouble(
+                            "balance"
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Database error: "
+                            + e.getMessage()
+            );
+        }
+
+        return null;
+    }
+
+    // ==================================
+    // DEPOSIT MONEY
+    // ==================================
+
+    public static boolean depositMoney(
+            String accountNumber,
+            double amount) {
+
+        String sql = """
+                UPDATE accounts
+                SET balance = balance + ?
+                WHERE account_number = ?
+                """;
+
+        try (
+                Connection connection = connect();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            statement.setDouble(1, amount);
+            statement.setString(2, accountNumber);
+
+            return statement.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Deposit error: "
+                            + e.getMessage()
+            );
+
+            return false;
+        }
+    }
+
+    // ==================================
+    // WITHDRAW MONEY
+    // ==================================
+
+    public static boolean withdrawMoney(
+            String accountNumber,
+            double amount) {
+
+        String sql = """
+                UPDATE accounts
+                SET balance = balance - ?
+                WHERE account_number = ?
+                """;
+
+        try (
+                Connection connection = connect();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            statement.setDouble(1, amount);
+            statement.setString(2, accountNumber);
+
+            return statement.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Withdrawal error: "
+                            + e.getMessage()
+            );
+
+            return false;
+        }
+    }
 }
