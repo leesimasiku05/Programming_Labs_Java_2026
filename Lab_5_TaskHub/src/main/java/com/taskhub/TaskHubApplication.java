@@ -2,11 +2,9 @@ package com.taskhub;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -17,32 +15,19 @@ public class TaskHubApplication extends Application {
 
     @Override
     public void init() {
-        springContext = org.springframework.boot.SpringApplication.run(
-                TaskHubApplication.class
-        );
+        // Start the Spring Boot application first
+        springContext = SpringApplication.run(TaskHubApplication.class);
     }
 
     @Override
-    public void start(Stage stage) throws Exception {
-
-        FXMLLoader loader = new FXMLLoader(
-                TaskHubApplication.class.getResource("/ui.fxml")
-        );
-
-        // Tell JavaFX to get controllers from Spring
-        loader.setControllerFactory(springContext::getBean);
-
-        Parent root = loader.load();
-
-        Scene scene = new Scene(root, 500, 400);
-
-        stage.setTitle("TaskHub");
-        stage.setScene(scene);
-        stage.show();
+    public void start(Stage stage) {
+        // Send the JavaFX stage into the Spring application
+        springContext.publishEvent(new StageReadyEvent(stage));
     }
 
     @Override
     public void stop() {
+        // Shut down Spring when JavaFX closes
         if (springContext != null) {
             springContext.close();
         }
@@ -54,4 +39,3 @@ public class TaskHubApplication extends Application {
         launch(args);
     }
 }
-

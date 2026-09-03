@@ -21,34 +21,32 @@ public class StageInitializer {
     public void onStageReady(StageReadyEvent event) {
 
         try {
-
             Stage stage = event.getStage();
 
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/ui.fxml")
             );
 
-            loader.setControllerFactory(
-                    type -> {
+            // Give the FXML loader the controller managed by Spring
+            loader.setControllerFactory(type -> {
 
-                        if (type == TaskController.class) {
-                            return taskController;
-                        }
+                if (type == TaskController.class) {
+                    return taskController;
+                }
 
-                        return null;
-                    }
-            );
+                return null;
+            });
 
             Parent root = loader.load();
 
-            Scene scene = new Scene(root);
+            Scene scene = new Scene(root, 600, 450);
 
-            stage.setTitle("TaskHub");
+            stage.setTitle("TaskHub - Project Task Manager");
             stage.setScene(scene);
+            stage.setResizable(false);
             stage.show();
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
     }
