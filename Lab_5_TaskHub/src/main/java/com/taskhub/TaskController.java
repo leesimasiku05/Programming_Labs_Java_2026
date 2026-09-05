@@ -15,7 +15,7 @@ public class TaskController {
     private final TaskService taskService;
 
     @FXML
-    private ListView<String> taskListView;
+    private ListView<Task> taskListView;
 
     @FXML
     private TextField taskTextField;
@@ -30,34 +30,50 @@ public class TaskController {
 
     @FXML
     public void initialize() {
-
         refreshTaskList();
-
-        statusLabel.setText(
-                taskService.getTasks().size() + " tasks available"
-        );
+        updateTaskCount();
     }
 
     @FXML
     private void handleAddTask() {
 
-        String taskDescription = taskTextField.getText();
+        String description = taskTextField.getText();
 
-        if (taskDescription == null ||
-                taskDescription.trim().isEmpty()) {
-
+        if (description == null || description.trim().isEmpty()) {
             statusLabel.setText("Please enter a task.");
-
             return;
         }
 
-        taskService.addTask(taskDescription);
-
-        refreshTaskList();
+        taskService.addTask(description);
 
         taskTextField.clear();
 
+        refreshTaskList();
+        updateTaskCount();
+
         statusLabel.setText("Task added successfully.");
+    }
+
+    @FXML
+    private void handleTaskCheck() {
+
+        Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
+
+        if (selectedTask == null) {
+            statusLabel.setText("Select a task first.");
+            return;
+        }
+
+        selectedTask.setCompleted(!selectedTask.isCompleted());
+
+        refreshTaskList();
+        updateTaskCount();
+
+        statusLabel.setText(
+                selectedTask.isCompleted()
+                        ? "Task completed!"
+                        : "Task marked as incomplete."
+        );
     }
 
     private void refreshTaskList() {
@@ -67,5 +83,12 @@ public class TaskController {
                         taskService.getTasks()
                 )
         );
+    }
+
+    private void updateTaskCount() {
+
+        int taskCount = taskService.getTasks().size();
+
+        statusLabel.setText(taskCount + " task(s)");
     }
 }

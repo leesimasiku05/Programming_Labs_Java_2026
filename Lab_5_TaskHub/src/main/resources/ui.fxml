@@ -51,8 +51,13 @@
 
     </HBox>
 
+    <Button text="Complete / Uncomplete Task"
+            onAction="#handleTaskCheck"
+            prefWidth="220"
+            prefHeight="35"/>
+
     <Label fx:id="statusLabel"
-           text="TaskHub is ready!"
+           text="No tasks yet."
            style="-fx-font-size: 14px;"/>
 
 </VBox>
